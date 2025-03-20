@@ -7,7 +7,7 @@ async function start() {
     document.body.style.fontFamily = 'Arial, sans-serif';
     document.body.style.padding = '20px';
 
-    // Crear barra de búsqueda
+
     let searchBar = document.createElement('input');
     searchBar.placeholder = 'Buscar posts...';
     searchBar.style.position = 'fixed';
@@ -20,7 +20,7 @@ async function start() {
     searchBar.addEventListener('input', filterPosts);
     document.body.appendChild(searchBar);
 
-    // Contenedor principal
+
     let container = document.createElement('div');
     container.style.marginTop = '70px';
     document.body.appendChild(container);
@@ -69,7 +69,7 @@ function renderPosts(posts, containerPosts) {
         if (validarURL(post.imagen)) {
             img.src = post.imagen;
         } 
-        
+
         img.style.width = '100%';
         img.style.height = '150px';
         img.style.objectFit = 'cover';

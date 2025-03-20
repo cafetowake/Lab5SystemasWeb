@@ -6,11 +6,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    function validarURL(str) {
-        const patron = new RegExp("^(?:http(s)?:\\/\\/)?[\\w.-]+(?:\\.[\\w\\.-]+)+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$");
-        return patron.test(str);
-    }
-
     document.body.style.fontFamily = 'Arial, sans-serif';
     document.body.style.padding = '20px';
 
@@ -93,47 +88,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoRefresh(commentsContainer, postId);
 });
 
+function validarURL(str) {
+    const patron = new RegExp("^(?:http(s)?:\\/\\/)?[\\w.-]+(?:\\.[\\w\\.-]+)+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$");
+    return patron.test(str);
+}
 
-async function mostrarPost(container, postId) {
+async function mostrarComentarios(container, postId) {
     try {
-
-        const response = await fetch('http://awita.site:3000/posts');
-        if (!response.ok) throw new Error('Error al obtener posts');
-        const data = await response.json();
-        const post = data.posts.find(p => p.id == postId); 
-
-        if (!post) throw new Error('Post no encontrado');
-
-        container.innerHTML = '';
-
-
-        let h2title = document.createElement('h2');
-        h2title.textContent = post.titulo;
-        h2title.style.textAlign = 'center';
-        h2title.style.color = '#1a1a1a';
-        container.appendChild(h2title);
-
-        let img = document.createElement('img');
-        if (validarURL(post.imagen)) {
-            img.src = post.imagen;
-        } 
+        const response = await fetch(`http://awita.site:3000/posts/${postId}`);
+        if (!response.ok) throw new Error('Error al obtener comentarios');
+        const post = await response.json();
         
-        img.style.width = '100%';
-        img.style.maxHeight = '400px';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '8px';
-        img.style.margin = '10px 0';
-        container.appendChild(img);
-
-        let p = document.createElement('p');
-        p.textContent = post.descripcion || "Sin descripción";
-        p.style.color = '#666';
-        p.style.textAlign = 'center';
-        p.style.fontSize = '1.1em';
-        container.appendChild(p);
-
+        container.innerHTML = '<h3 style="margin: 15px 0; color: #333;">Comentarios:</h3>';
+        
+        if (post.comentarios && post.comentarios.length > 0) {
+            post.comentarios.forEach(comentario => {
+                const commentDiv = document.createElement('div');
+                commentDiv.style.padding = '10px';
+                commentDiv.style.margin = '10px 0';
+                commentDiv.style.backgroundColor = '#f8f9fa';
+                commentDiv.style.borderRadius = '4px';
+                commentDiv.innerHTML = `
+                    <p style="margin: 0; color: #1c1c1c;">${comentario.comentario}</p>
+                    <small style="color: #666;">${new Date(comentario.fecha).toLocaleString()}</small>
+                `;
+                container.appendChild(commentDiv);
+            });
+        } else {
+            container.innerHTML += '<p style="color: #999; text-align: center;">Sé el primero en comentar</p>';
+        }
     } catch (error) {
         console.error(error);
-        container.innerHTML = '<p style="color:red; text-align:center;">Error: Post no encontrado</p>';
+        container.innerHTML = '<p style="color:red;">Error al cargar comentarios</p>';
     }
+}
+
+async function agregarComentario(container, texto, postId) {
+    try {
+        const response = await fetch(`http://awita.site:3000/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                comentario: texto,
+                fecha: new Date().toISOString()
+            })
+        });
+        
+        if (response.ok) {
+            await mostrarComentarios(container, postId);
+            container.scrollTop = container.scrollHeight;
+        }
+    } catch (error) {
+        console.error('Error al agregar comentario:', error);
+    }
+}
+
+
+function autoRefresh(container, postId) {
+    setInterval(async () => {
+        await mostrarComentarios(container, postId);
+    }, 3000); 
 }
