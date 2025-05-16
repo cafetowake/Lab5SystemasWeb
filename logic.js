@@ -1,13 +1,15 @@
+// Valida si un string es una URL
 function validarURL(str) {
-    const patron = new RegExp("^(?:http(s)?:\\/\\/)?[\\w.-]+(?:\\.[\\w\\.-]+)+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$");
+    const patron = /^(https?:\/\/)?([\w.-]+)\.([a-z\.]{2,6})([\/\w\.-]*)*\/?$/i;
     return patron.test(str);
 }
 
+// Inicializa la página principal
 async function start() {
     document.body.style.fontFamily = 'Arial, sans-serif';
     document.body.style.padding = '20px';
 
-
+    // Barra de búsqueda fija
     let searchBar = document.createElement('input');
     searchBar.placeholder = 'Buscar posts...';
     searchBar.style.position = 'fixed';
@@ -20,7 +22,7 @@ async function start() {
     searchBar.addEventListener('input', filterPosts);
     document.body.appendChild(searchBar);
 
-
+    // Contenedor de posts
     let container = document.createElement('div');
     container.style.marginTop = '70px';
     document.body.appendChild(container);
@@ -28,6 +30,7 @@ async function start() {
     await getPosts(container);
 }
 
+// Obtiene los posts del servidor y los muestra
 async function getPosts(container) {
     try {
         const response = await fetch('http://awita.site:3000/posts');
@@ -50,9 +53,9 @@ async function getPosts(container) {
     }
 }
 
+// Renderiza los posts como tarjetas
 function renderPosts(posts, containerPosts) {
     containerPosts.innerHTML = '';
-    
     posts.forEach(post => {
         let card = document.createElement('div');
         card.style.border = '1px solid #ddd';
@@ -68,8 +71,7 @@ function renderPosts(posts, containerPosts) {
         let img = document.createElement('img');
         if (validarURL(post.imagen)) {
             img.src = post.imagen;
-        } 
-
+        }
         img.style.width = '100%';
         img.style.height = '150px';
         img.style.objectFit = 'cover';
@@ -86,7 +88,7 @@ function renderPosts(posts, containerPosts) {
         desc.style.fontSize = '0.9em';
 
         let category = document.createElement('div');
-        category.textContent = `Categoría: ${post.categoria}`;
+        category.textContent = post.categoria ? `Categoría: ${post.categoria}` : '';
         category.style.color = '#999';
         category.style.fontSize = '0.8em';
         category.style.marginTop = '10px';
@@ -94,19 +96,20 @@ function renderPosts(posts, containerPosts) {
         card.appendChild(img);
         card.appendChild(title);
         card.appendChild(desc);
-        card.appendChild(category);
+        if (post.categoria) card.appendChild(category);
         containerPosts.appendChild(card);
     });
 }
 
+// Filtra los posts según el texto de búsqueda
 function filterPosts() {
     let searchText = document.querySelector('input').value.toLowerCase();
     let posts = Array.from(document.getElementById('containerPosts').children);
-    
     posts.forEach(post => {
         const textContent = post.textContent.toLowerCase();
         post.style.display = textContent.includes(searchText) ? 'block' : 'none';
     });
 }
 
+// Inicia la app
 start();
